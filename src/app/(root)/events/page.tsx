@@ -52,7 +52,10 @@ const Events = () => {
     setIsDialogOpen(true);
   }, []);
 
-  const columns = useMemo(() => getEventsColumns({ onEdit, onDelete }), []);
+  const columns = useMemo(
+    () => getEventsColumns({ onEdit, onDelete }),
+    [onDelete, onEdit],
+  );
   return (
     <Card className="h-full">
       <CardHeader>
