@@ -74,8 +74,13 @@ const Events = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {isFetching && <span>Loading</span>}
-        {!isFetching && <DataTable data={events} columns={columns} />}
+        {isFetching ? (
+          <span>Loading</span>
+        ) : events && events.length > 0 ? (
+          <DataTable data={events} columns={columns} />
+        ) : (
+          <span>No events available</span>
+        )}
       </CardContent>
     </Card>
   );
