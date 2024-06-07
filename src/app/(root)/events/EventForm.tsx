@@ -76,7 +76,7 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
       return [updatedEvent];
     });
     toast({
-      description: "Bank Account was updated successfully.",
+      description: "Event was updated successfully.",
     });
     onOpenChange(false);
   };
@@ -90,32 +90,20 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
   };
 
   const createMutation = api.event.create.useMutation({
-    // mutationFn: createEvent,
     onSuccess: onCreateSuccess,
     onError: onRequestError,
   });
 
   const updateMutation = api.event.update.useMutation({
-    // mutationFn: ({ id, ...dto }: CreateEventDto & { id: number }) =>
-    //   updateEvent(id, dto),
     onSuccess: onUpdateSuccess,
     onError: onRequestError,
   });
 
   useEffect(() => {
-    if (event) {
-      form.reset({
-        code: event.code,
-        name: event.name,
-      });
-    } else {
-      form.reset();
-    }
+    form.reset(event ? { code: event.code, name: event.name } : {});
   }, [isOpen, event, form]);
 
-  const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (
-    values: z.infer<typeof formSchema>,
-  ) => {
+  const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (values) => {
     const createDto: CreateEventDto = {
       code: values.code,
       name: values.name,
@@ -139,7 +127,7 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               name="code"
               control={form.control}
@@ -158,7 +146,7 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Code</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input placeholder="name here..." {...field} />
                   </FormControl>
@@ -166,20 +154,23 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
                 </FormItem>
               )}
             />
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={
+                  !form.formState.isValid ||
+                  createMutation.isPending ||
+                  updateMutation.isPending
+                }
+              >
+                {(createMutation.isPending || updateMutation.isPending) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Confirm
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
-        <DialogFooter>
-          <Button
-            type="button"
-            disabled={!form.formState.isValid || createMutation.isPending}
-            onClick={form.handleSubmit(onSubmit)}
-          >
-            {createMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Confirm
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
