@@ -16,35 +16,28 @@ const Events = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: events, isFetching } = api.event.getAll.useQuery();
+  const { data: events, isFetching, refetch } = api.event.getAll.useQuery();
 
   const deleteMutation = api.event.delete.useMutation({
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["fetchEvent"],
+      await queryClient.invalidateQueries({ queryKey: ["event.getAll"] });
+      await refetch();
+      toast({ description: "Event was deleted successfully." });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Uh Oh! Something went wrong!",
+        description: "There was a problem with your request.",
       });
     },
   });
 
   const onDelete = useCallback(
     (event: Event) => {
-      return deleteMutation.mutate(
-        { id: event.id },
-        {
-          onSuccess: () => {
-            toast({ description: "Event was deleted successfully." });
-          },
-          onError: () => {
-            toast({
-              variant: "destructive",
-              title: "Uh Oh! Something went wrong!",
-              description: "There was a problem with your request.",
-            });
-          },
-        },
-      );
+      deleteMutation.mutate({ id: event.id });
     },
-    [deleteMutation, toast],
+    [deleteMutation],
   );
 
   const onEdit = useCallback((event: Event) => {
@@ -54,8 +47,9 @@ const Events = () => {
 
   const columns = useMemo(
     () => getEventsColumns({ onEdit, onDelete }),
-    [onDelete, onEdit],
+    [onEdit, onDelete],
   );
+
   return (
     <Card className="h-full">
       <CardHeader>
