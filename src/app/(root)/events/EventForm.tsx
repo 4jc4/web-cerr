@@ -23,7 +23,6 @@ import { Loader2 } from "lucide-react";
 import { type CreateEventDto, type Event } from "~/types/Event.types";
 import { useToast } from "~/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "~/services/queryKey.factory";
 import { useEffect } from "react";
 import { api } from "~/trpc/react";
 
@@ -55,15 +54,12 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
   });
 
   const onCreateSuccess = async (newEvent: Event) => {
-    await queryClient.setQueryData(
-      queryKeys.fetchEvents.all,
-      (oldData?: Event[]) => {
-        if (oldData) {
-          return [newEvent, ...oldData];
-        }
-        return [newEvent];
-      },
-    );
+    await queryClient.setQueryData(["fetchEvent"], (oldData?: Event[]) => {
+      if (oldData) {
+        return [newEvent, ...oldData];
+      }
+      return [newEvent];
+    });
     toast({
       description: "Event was added successfully.",
     });
@@ -71,17 +67,14 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
   };
 
   const onUpdateSuccess = async (updatedEvent: Event) => {
-    await queryClient.setQueryData(
-      queryKeys.fetchEvents.all,
-      (oldData?: Event[]) => {
-        if (oldData) {
-          return oldData.map((event) =>
-            event.id === updatedEvent.id ? updatedEvent : event,
-          );
-        }
-        return [updatedEvent];
-      },
-    );
+    await queryClient.setQueryData(["fetchEvent"], (oldData?: Event[]) => {
+      if (oldData) {
+        return oldData.map((event) =>
+          event.id === updatedEvent.id ? updatedEvent : event,
+        );
+      }
+      return [updatedEvent];
+    });
     toast({
       description: "Bank Account was updated successfully.",
     });

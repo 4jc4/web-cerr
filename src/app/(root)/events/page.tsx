@@ -2,12 +2,57 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import EventForm from "./EventForm";
-import { useState } from "react";
 import { type Event } from "~/types/Event.types";
+import { api } from "~/trpc/react";
+import { getEventsColumns } from "./eventsColumns";
+import DataTable from "~/components/DataTable/DataTable";
+import { useCallback, useMemo, useState } from "react";
+import { useToast } from "~/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Events = () => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: events, isFetching } = api.event.getAll.useQuery();
+
+  const deleteMutation = api.event.delete.useMutation({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["fetchEvent"],
+      });
+    },
+  });
+
+  const onDelete = useCallback(
+    (event: Event) => {
+      return deleteMutation.mutate(
+        { id: event.id },
+        {
+          onSuccess: () => {
+            toast({ description: "Event was deleted successfully." });
+          },
+          onError: () => {
+            toast({
+              variant: "destructive",
+              title: "Uh Oh! Something went wrong!",
+              description: "There was a problem with your request.",
+            });
+          },
+        },
+      );
+    },
+    [deleteMutation, toast],
+  );
+
+  const onEdit = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
+  }, []);
+
+  const columns = useMemo(() => getEventsColumns({ onEdit, onDelete }), []);
   return (
     <Card className="h-full">
       <CardHeader>
@@ -29,8 +74,8 @@ const Events = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* {isFetching && <span>Loading</span>}
-        {!isFetching && <DataTable data={bankAccounts} columns={columns} />} */}
+        {isFetching && <span>Loading</span>}
+        {!isFetching && <DataTable data={events} columns={columns} />}
       </CardContent>
     </Card>
   );
