@@ -32,7 +32,7 @@ export const eventRouter = createTRPCRouter({
   update: publicProcedure.input(updateSchema).mutation(({ ctx, input }) => {
     const { id, ...data } = input;
 
-    return ctx.db.event.create({
+    return ctx.db.event.update({
       where: { id },
       data,
     });

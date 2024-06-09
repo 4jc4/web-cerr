@@ -73,13 +73,20 @@ const Events = () => {
                   setSelectedEvent(null);
                 }
               }}
+              onSubmit={(data) => {
+                setLocalEvents((prevEvents) =>
+                  prevEvents.map((event) =>
+                    event.id === data.id ? { ...event, ...data } : event,
+                  ),
+                );
+              }}
             />
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {isFetching ? (
-          <span>Loading</span>
+          <span>Loading...</span>
         ) : localEvents && localEvents.length > 0 ? (
           <DataTable data={localEvents} columns={columns} />
         ) : (

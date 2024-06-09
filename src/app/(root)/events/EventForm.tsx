@@ -38,9 +38,15 @@ interface EventFormProps {
   isOpen: boolean;
   onOpenChange: (value: boolean) => void;
   event: Event | null;
+  onSubmit: (data: Partial<Event>) => void; // Adiciona onSubmit aqui
 }
 
-const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
+const EventForm = ({
+  isOpen,
+  onOpenChange,
+  event,
+  onSubmit,
+}: EventFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -103,7 +109,7 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
     form.reset(event ? { code: event.code, name: event.name } : {});
   }, [isOpen, event, form]);
 
-  const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (values) => {
+  const handleSubmit: SubmitHandler<z.infer<typeof formSchema>> = (values) => {
     const createDto: CreateEventDto = {
       code: values.code,
       name: values.name,
@@ -111,7 +117,9 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
     if (!event) {
       createMutation.mutate(createDto);
     } else {
-      updateMutation.mutate({ ...createDto, id: event.id });
+      const updatedEvent = { ...createDto, id: event.id };
+      updateMutation.mutate(updatedEvent);
+      onSubmit(updatedEvent); // Chama a prop onSubmit com os dados atualizados
     }
   };
 
@@ -127,7 +135,10 @@ const EventForm = ({ isOpen, onOpenChange, event }: EventFormProps) => {
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               name="code"
               control={form.control}
