@@ -2,7 +2,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -84,24 +83,6 @@ const DataTable = <TData, TValue>({
             </TableRow>
           )}
         </TableBody>
-        <TableFooter>
-          {table.getFooterGroups().map((footerGroup) => {
-            return (
-              <TableRow key={footerGroup.id}>
-                {footerGroup.headers.map((footer) => {
-                  return (
-                    <TableCell key={footer.id} colSpan={footer.colSpan}>
-                      {flexRender(
-                        footer.column.columnDef.footer,
-                        footer.getContext(),
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
-        </TableFooter>
       </Table>
     </div>
   );

@@ -6,22 +6,28 @@ import { type Event } from "~/types/Event.types";
 import { api } from "~/trpc/react";
 import { getEventsColumns } from "./eventsColumns";
 import DataTable from "~/components/DataTable/DataTable";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useToast } from "~/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 const Events = () => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const queryClient = useQueryClient();
+  const [localEvents, setLocalEvents] = useState<Event[]>([]);
   const { toast } = useToast();
 
-  const { data: events, isFetching, refetch } = api.event.getAll.useQuery();
+  const { data: events, isFetching } = api.event.getAll.useQuery();
+
+  useEffect(() => {
+    if (events) {
+      setLocalEvents(events);
+    }
+  }, [events]);
 
   const deleteMutation = api.event.delete.useMutation({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["event.getAll"] });
-      await refetch();
+    onSuccess: () => {
+      setLocalEvents((prevEvents) =>
+        prevEvents.filter((event) => event.id !== selectedEvent?.id),
+      );
       toast({ description: "Event was deleted successfully." });
     },
     onError: () => {
@@ -35,6 +41,7 @@ const Events = () => {
 
   const onDelete = useCallback(
     (event: Event) => {
+      setSelectedEvent(event);
       deleteMutation.mutate({ id: event.id });
     },
     [deleteMutation],
@@ -73,8 +80,8 @@ const Events = () => {
       <CardContent>
         {isFetching ? (
           <span>Loading</span>
-        ) : events && events.length > 0 ? (
-          <DataTable data={events} columns={columns} />
+        ) : localEvents && localEvents.length > 0 ? (
+          <DataTable data={localEvents} columns={columns} />
         ) : (
           <span>No events available</span>
         )}
